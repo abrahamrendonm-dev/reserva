@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;500;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  --background: #faf9f6;
+  --soft-pink: #fdf2f8;
+}
+
+body {
+  font-family: 'Quicksand', sans-serif;
+  background-color: var(--background);
+  color: #4a4a4a;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.02);
+}
+
+/* Estilo para los eventos del calendario */
+.fc-event {
+  border-radius: 8px !important;
+  border: none !important;
+  padding: 2px 5px !important;
+  font-size: 0.8rem !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}

@@ -85,14 +85,14 @@ const Auth = () => {
                         Vida <span className="font-bold">Materna</span>
                     </h1>
                     <p className="text-pink-100 text-sm mt-2 font-medium tracking-wide">
-                        Gestión de Bienestar Infantil
+                        Gestión de Bienestar
                     </p>
                 </div>
 
                 <form onSubmit={handleAuth} className="p-10 space-y-5 relative bg-white">
                     <div className="text-center mb-6">
                         <h2 className="text-xl font-bold text-gray-700">
-                            {isRegister ? 'Registro de Especialista' : 'Bienvenida de nuevo'}
+                            {isRegister ? 'Registro de Especialista' : 'Bienvenida(o) de nuevo'}
                         </h2>
                     </div>
 
@@ -139,7 +139,7 @@ const Auth = () => {
                             onClick={() => setIsRegister(!isRegister)}
                             className="text-sm text-gray-400 font-medium hover:text-pink-500 transition-colors"
                         >
-                            {isRegister ? '¿Ya tienes cuenta? Inicia sesión' : '¿Nueva especialista? Regístrate aquí'}
+                            {isRegister ? '¿Ya tienes cuenta? Inicia sesión' : '¿Nueva(o) especialista? Regístrate aquí'}
                         </button>
                     </div>
                 </form>

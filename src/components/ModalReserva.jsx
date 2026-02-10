@@ -74,19 +74,30 @@ const ModalReserva = ({ isOpen, onClose, selectionInfo, onSave }) => {
         }
     }, [isOpen, selectionInfo, isEdit]);
 
-    // Lógica de WhatsApp recuperada
+    // Lógica de WhatsApp CORREGIDA
     const handleWhatsApp = (target) => {
         const esp = terapeutas.find(x => String(x.id) === String(form.terapeutaId));
         const fechaObj = new Date(form.fechaInicio);
         const opciones = { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' };
         const fechaFormateada = fechaObj.toLocaleString('es-MX', opciones);
 
-        const numero = target === 'mama' ? form.telefono : esp?.telefono;
+        // 1. Obtener número base
+        let numeroBruto = target === 'mama' ? form.telefono : esp?.telefono;
+
+        // 2. Limpieza profunda: Solo números
+        let numLimpio = numeroBruto ? String(numeroBruto).replace(/\D/g, '') : '';
+
+        // 3. Formatear para México (si tiene 10 dígitos, ponerle el 52)
+        if (numLimpio.length === 10) {
+            numLimpio = `52${numLimpio}`;
+        }
+
         const mensaje = target === 'mama'
             ? `Hola ${form.nombreCliente}, confirmamos tu cita en Vida Materna para el día ${fechaFormateada} con el especialista ${esp?.nombre || ''}.`
             : `Hola ${esp?.nombre}, tienes una nueva cita agendada para el día ${fechaFormateada}. Cliente: ${form.nombreCliente}.`;
 
-        window.open(`https://wa.me/${numero?.replace(/\D/g, '')}?text=${encodeURIComponent(mensaje)}`, '_blank');
+        // 4. Abrir URL limpia sin el símbolo "+"
+        window.open(`https://wa.me/${numLimpio}?text=${encodeURIComponent(mensaje)}`, '_blank');
     };
 
     const handleSubmit = async (e) => {
@@ -94,7 +105,7 @@ const ModalReserva = ({ isOpen, onClose, selectionInfo, onSave }) => {
         const inicioDate = new Date(form.fechaInicio);
         const finDate = new Date(form.fechaFin);
         const ahora = new Date();
-        ahora.setMinutes(ahora.getMinutes() - 15); // Margen de cortesía
+        ahora.setMinutes(ahora.getMinutes() - 15);
 
         if (!isEdit && inicioDate < ahora) {
             alert("🚫 No puedes agendar en el pasado.");

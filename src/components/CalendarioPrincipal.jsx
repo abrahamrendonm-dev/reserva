@@ -3,7 +3,7 @@ import FullCalendar from '@fullcalendar/react';
 import resourceTimeGridPlugin from '@fullcalendar/resource-timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import esLocale from '@fullcalendar/core/locales/es';
-import { useReservas, useTerapeutas, useSalas } from '../hooks/useSupabase';
+import { useReservas, useTerapeutas, useSalas, useDisponibilidadTodas } from '../hooks/useSupabase';
 import ModalReserva from './ModalReserva';
 import { Users, Home, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -18,6 +18,7 @@ const CalendarioPrincipal = () => {
     const { terapeutas } = useTerapeutas();
     const { salas } = useSalas();
     const { reservas, loading, refetch } = useReservas();
+    const { porTerapeuta } = useDisponibilidadTodas();
 
     // Función para actualizar el título de la fecha
     const handleDatesSet = (arg) => {
@@ -29,9 +30,16 @@ const CalendarioPrincipal = () => {
         return recursosList.map(r => ({
             id: r.id,
             title: r.nombre,
-            extendedProps: { tipo: mode }
+            extendedProps: { tipo: mode },
+            ...(mode === 'terapeutas' ? {
+                businessHours: (porTerapeuta[r.id] || []).map(d => ({
+                    daysOfWeek: [d.dia_semana],
+                    startTime: d.hora_inicio,
+                    endTime: d.hora_fin
+                }))
+            } : {})
         }));
-    }, [mode, terapeutas, salas]);
+    }, [mode, terapeutas, salas, porTerapeuta]);
 
     const events = useMemo(() => {
         if (!reservas || !terapeutas) return [];
@@ -146,6 +154,7 @@ const CalendarioPrincipal = () => {
                     slotMaxTime="20:00:00"
                     height="100%"
                     selectable={true}
+                    selectConstraint={mode === 'terapeutas' ? 'businessHours' : undefined}
                     select={handleDateSelect}
                     eventClick={handleEventClick}
                     nowIndicator={true}

@@ -99,6 +99,114 @@ export const useSalas = () => {
 };
 
 /**
+ * Hook para cargar el perfil (rol) del usuario autenticado
+ */
+export const usePerfil = (session) => {
+  const [perfil, setPerfil] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchPerfil = useCallback(async () => {
+    if (!session) {
+      setPerfil(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('perfiles')
+      .select('*')
+      .eq('id', session.user.id)
+      .maybeSingle();
+    if (error) console.error(error);
+    setPerfil(data);
+    setLoading(false);
+  }, [session]);
+
+  useEffect(() => { fetchPerfil(); }, [fetchPerfil]);
+
+  return { perfil, loading, refetch: fetchPerfil };
+};
+
+/**
+ * Hook para administradores: lista de todos los perfiles de usuarios
+ */
+export const useUsuarios = () => {
+  const [usuarios, setUsuarios] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchUsuarios = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('perfiles')
+      .select('*')
+      .order('updated_at');
+    if (error) console.error(error);
+    setUsuarios(data || []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchUsuarios(); }, [fetchUsuarios]);
+
+  return { usuarios, loading, refetch: fetchUsuarios };
+};
+
+/**
+ * Hook para la disponibilidad semanal de UN especialista (para editarla)
+ */
+export const useDisponibilidad = (terapeutaId) => {
+  const [disponibilidad, setDisponibilidad] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchDisponibilidad = useCallback(async () => {
+    if (!terapeutaId) {
+      setDisponibilidad([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('disponibilidad_semanal')
+      .select('*')
+      .eq('terapeuta_id', terapeutaId)
+      .order('dia_semana')
+      .order('hora_inicio');
+    if (error) console.error(error);
+    setDisponibilidad(data || []);
+    setLoading(false);
+  }, [terapeutaId]);
+
+  useEffect(() => { fetchDisponibilidad(); }, [fetchDisponibilidad]);
+
+  return { disponibilidad, loading, refetch: fetchDisponibilidad };
+};
+
+/**
+ * Hook para la disponibilidad semanal de TODOS los especialistas
+ * (usado por la agenda para restringir horarios seleccionables por recurso)
+ */
+export const useDisponibilidadTodas = () => {
+  const [porTerapeuta, setPorTerapeuta] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  const fetchTodas = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from('disponibilidad_semanal').select('*');
+    if (error) console.error(error);
+    const agrupado = {};
+    (data || []).forEach(d => {
+      if (!agrupado[d.terapeuta_id]) agrupado[d.terapeuta_id] = [];
+      agrupado[d.terapeuta_id].push(d);
+    });
+    setPorTerapeuta(agrupado);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchTodas(); }, [fetchTodas]);
+
+  return { porTerapeuta, loading, refetch: fetchTodas };
+};
+
+/**
  * Hook Senior para crear reservas con validación de conflictos y Upsert de cliente
  */
 export const useCreateReserva = () => {

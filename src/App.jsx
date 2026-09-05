@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
+import { usePerfil } from './hooks/useSupabase';
 import Auth from './components/Auth'; // El nuevo componente
+import PendienteActivacion from './components/PendienteActivacion';
 import CalendarioPrincipal from './components/CalendarioPrincipal';
-import GestionTerapeutas from './components/GestionTerapeutas';
+import GestionUsuarios from './components/GestionUsuarios';
 import GestionSalas from './components/GestionSalas';
+import MiHorario from './components/MiHorario';
 import { Heart, LogOut } from 'lucide-react';
 
 function App() {
   const [tab, setTab] = useState('agenda');
   const [session, setSession] = useState(null);
+  const { perfil, loading: perfilLoading } = usePerfil(session);
 
   useEffect(() => {
     // Escuchar cambios en la autenticación
@@ -27,6 +31,19 @@ function App() {
   if (!session) {
     return <Auth />;
   }
+
+  if (perfilLoading) {
+    return <div className="min-h-screen flex items-center justify-center text-gray-400">Cargando...</div>;
+  }
+
+  // Sin rol asignado todavía: bloquear acceso al resto de la app
+  if (!perfil || perfil.rol === 'sin_asignar') {
+    return <PendienteActivacion email={session.user.email} />;
+  }
+
+  const esAdmin = perfil.rol === 'administrador';
+  const puedeAdministrar = esAdmin || perfil.rol === 'recepcionista';
+  const esEspecialista = perfil.rol === 'especialista';
 
   return (
     <div className="min-h-screen p-4 md:p-10">
@@ -48,15 +65,23 @@ function App() {
 
         <nav className="inline-flex bg-white p-2 rounded-3xl shadow-sm border border-pink-50 mt-6">
           <button onClick={() => setTab('agenda')} className={`px-6 py-2 rounded-2xl transition ${tab === 'agenda' ? 'bg-pink-400 text-white' : 'text-gray-400'}`}>Agenda</button>
-          <button onClick={() => setTab('equipo')} className={`px-6 py-2 rounded-2xl transition ${tab === 'equipo' ? 'bg-pink-400 text-white' : 'text-gray-400'}`}>Equipo</button>
-          <button onClick={() => setTab('salas')} className={`px-6 py-2 rounded-2xl transition ${tab === 'salas' ? 'bg-pink-400 text-white' : 'text-gray-400'}`}>Salas</button>
+          {puedeAdministrar && (
+            <button onClick={() => setTab('usuarios')} className={`px-6 py-2 rounded-2xl transition ${tab === 'usuarios' ? 'bg-pink-400 text-white' : 'text-gray-400'}`}>Usuarios</button>
+          )}
+          {puedeAdministrar && (
+            <button onClick={() => setTab('salas')} className={`px-6 py-2 rounded-2xl transition ${tab === 'salas' ? 'bg-pink-400 text-white' : 'text-gray-400'}`}>Salas</button>
+          )}
+          {esEspecialista && (
+            <button onClick={() => setTab('horario')} className={`px-6 py-2 rounded-2xl transition ${tab === 'horario' ? 'bg-pink-400 text-white' : 'text-gray-400'}`}>Mi Horario</button>
+          )}
         </nav>
       </header>
 
       <main className="max-w-7xl mx-auto">
         {tab === 'agenda' && <CalendarioPrincipal />}
-        {tab === 'equipo' && <GestionTerapeutas />}
-        {tab === 'salas' && <GestionSalas />}
+        {tab === 'usuarios' && puedeAdministrar && <GestionUsuarios esAdmin={esAdmin} />}
+        {tab === 'salas' && puedeAdministrar && <GestionSalas />}
+        {tab === 'horario' && esEspecialista && <MiHorario perfil={perfil} />}
       </main>
     </div>
   );
